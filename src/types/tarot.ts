@@ -91,6 +91,7 @@ export interface UserProfile {
   uid: string;
   email: string;
   displayName: string;
+  photoURL?: string;
   zodiacSign?: string;
   isAnonymous?: boolean;
   readingsCount?: number;

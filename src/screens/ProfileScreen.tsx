@@ -8,6 +8,7 @@ import {
   TextInput,
   Modal,
   Alert,
+  Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -66,16 +67,29 @@ export const ProfileScreen: React.FC = () => {
             style={styles.profileGradient}
           >
             <View style={styles.avatarOrb}>
-              <Text style={styles.avatarSymbol}>{currentZodiac.symbol}</Text>
+              {user?.photoURL ? (
+                <Image
+                  source={{ uri: user.photoURL }}
+                  style={styles.avatarImage}
+                  resizeMode="cover"
+                />
+              ) : (
+                <Text style={styles.avatarSymbol}>{currentZodiac.symbol}</Text>
+              )}
             </View>
 
             <Text style={styles.userName}>{user?.displayName || 'Consulente Astral'}</Text>
             <Text style={styles.userEmail}>{user?.email || 'Visitante Místico'}</Text>
 
-            {user?.isAnonymous && (
+            {user?.isAnonymous ? (
               <View style={styles.guestBadge}>
                 <Ionicons name="sparkles" size={12} color={MysticColors.gold} />
                 <Text style={styles.guestBadgeText}>Modo Visitante Místico</Text>
+              </View>
+            ) : (
+              <View style={styles.googleBadge}>
+                <Ionicons name="logo-google" size={12} color="#EA4335" />
+                <Text style={styles.googleBadgeText}>Conta Astral Vinculada</Text>
               </View>
             )}
 
@@ -285,6 +299,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
   },
   avatarSymbol: {
     fontSize: 36,
@@ -312,6 +332,23 @@ const styles = StyleSheet.create({
   },
   guestBadgeText: {
     color: MysticColors.gold,
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  googleBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginTop: 8,
+  },
+  googleBadgeText: {
+    color: '#FFF',
     fontSize: 11,
     fontWeight: '700',
   },

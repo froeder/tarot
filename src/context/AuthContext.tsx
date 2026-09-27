@@ -9,6 +9,7 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db, isFirebaseInitialized } from '../services/firebase';
+import { loginWithGoogle } from '../services/googleAuth';
 import { UserProfile } from '../types/tarot';
 
 interface AuthContextType {
@@ -16,6 +17,7 @@ interface AuthContextType {
   isLoading: boolean;
   signIn: (email: string, pass: string) => Promise<void>;
   signUp: (email: string, pass: string, name: string, zodiacSign: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signInAsGuest: (name?: string, zodiacSign?: string) => Promise<void>;
   signOut: () => Promise<void>;
   updateProfile: (data: Partial<UserProfile>) => Promise<void>;
@@ -50,6 +52,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 uid: fbUser.uid,
                 email: fbUser.email || '',
                 displayName: fbUser.displayName || 'Consulente Astral',
+                photoURL: fbUser.photoURL || undefined,
                 isAnonymous: fbUser.isAnonymous,
               };
 
@@ -165,6 +168,57 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const signInWithGoogle = async () => {
+    setIsLoading(true);
+    try {
+      if (isFirebaseInitialized && auth) {
+        const fbUser = await loginWithGoogle();
+
+        let profile: UserProfile = {
+          uid: fbUser.uid,
+          email: fbUser.email || '',
+          displayName: fbUser.displayName || 'Consulente Astral',
+          photoURL: fbUser.photoURL || undefined,
+          isAnonymous: false,
+        };
+
+        if (db) {
+          try {
+            const userDocRef = doc(db, 'users', fbUser.uid);
+            const docSnap = await getDoc(userDocRef);
+            if (docSnap.exists()) {
+              profile = { ...profile, ...docSnap.data() };
+            } else {
+              profile.zodiacSign = 'Peixes';
+              profile.createdAt = new Date().toISOString();
+              profile.readingsCount = 0;
+              await setDoc(userDocRef, profile, { merge: true });
+            }
+          } catch (e) {
+            console.warn('Error reading/writing Google user profile in Firestore:', e);
+          }
+        }
+
+        setUser(profile);
+        await AsyncStorage.setItem(LOCAL_USER_KEY, JSON.stringify(profile));
+      } else {
+        // Offline / simulated mode
+        const profile: UserProfile = {
+          uid: `google_${Date.now()}`,
+          email: 'astral.google@meutarot.app',
+          displayName: 'Consulente Cósmico (Google)',
+          zodiacSign: 'Peixes',
+          createdAt: new Date().toISOString(),
+          readingsCount: 0,
+        };
+        setUser(profile);
+        await AsyncStorage.setItem(LOCAL_USER_KEY, JSON.stringify(profile));
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const signInAsGuest = async (name = 'Buscador Místico', zodiacSign = 'Peixes') => {
     setIsLoading(true);
     try {
@@ -220,6 +274,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         isLoading,
         signIn,
         signUp,
+        signInWithGoogle,
         signInAsGuest,
         signOut,
         updateProfile,

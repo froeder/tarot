@@ -1,4 +1,20 @@
 {
+  "auth": {
+    "providers": {
+      "anonymous": true,
+      "emailPassword": true,
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "Meu Tarot",
+        "supportEmail": "froeder3@gmail.com",
+        "authorizedRedirectUris": [
+          "https://frojho-tarot.firebaseapp.com/__/auth/handler",
+          "https://frojho-tarot.web.app/__/auth/handler",
+          "https://frojho.firebaseapp.com/__/auth/handler",
+          "http://localhost"
+        ]
+      }
+    }
+  },
   "hosting": {
     "site": "frojho-tarot",
     "public": "dist",

@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,7 +20,7 @@ import { ZODIAC_SIGNS } from '../data/horoscopeData';
 import { MysticColors } from '../theme/colors';
 
 export const AuthScreen: React.FC = () => {
-  const { signIn, signUp, signInAsGuest } = useAuth();
+  const { signIn, signUp, signInWithGoogle, signInAsGuest } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   
   const [email, setEmail] = useState('');
@@ -27,6 +28,7 @@ export const AuthScreen: React.FC = () => {
   const [name, setName] = useState('');
   const [selectedZodiac, setSelectedZodiac] = useState('Peixes');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
   const handleSubmit = async () => {
@@ -61,6 +63,29 @@ export const AuthScreen: React.FC = () => {
       setErrorMessage(msg);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setErrorMessage('');
+    setGoogleLoading(true);
+    try {
+      await signInWithGoogle();
+    } catch (err: any) {
+      console.warn('Google sign-in error:', err);
+      let msg = 'Não foi possível autenticar com o Google.';
+      if (err.code === 'auth/popup-closed-by-user') {
+        msg = 'A janela do Google foi fechada antes de concluir o login.';
+      } else if (err.code === 'auth/popup-blocked') {
+        msg = 'O navegador bloqueou o pop-up do Google. Permita pop-ups para entrar.';
+      } else if (err.code === 'auth/account-exists-with-different-credential') {
+        msg = 'Já existe uma conta associada a este e-mail.';
+      } else if (err.message) {
+        msg = err.message;
+      }
+      setErrorMessage(msg);
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -219,25 +244,41 @@ export const AuthScreen: React.FC = () => {
             />
           </View>
 
-          {/* Guest Mode Section */}
-          <View style={styles.guestSection}>
+          {/* Social and Alternate Login Section */}
+          <View style={styles.socialSection}>
             <View style={styles.dividerRow}>
               <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>OU</Text>
+              <Text style={styles.dividerText}>OU CONECTE-SE COM</Text>
               <View style={styles.dividerLine} />
             </View>
 
-            <MysticButton
-              title="Entrar como Visitante Místico"
-              variant="gold"
-              size="md"
-              icon="infinite-outline"
-              loading={loading}
+            {/* Google Sign In Button */}
+            <TouchableOpacity
+              style={styles.googleBtn}
+              activeOpacity={0.85}
+              onPress={handleGoogleLogin}
+              disabled={loading || googleLoading}
+            >
+              {googleLoading ? (
+                <ActivityIndicator color={MysticColors.purpleDeep} />
+              ) : (
+                <View style={styles.googleBtnContent}>
+                  <Ionicons name="logo-google" size={20} color="#EA4335" style={styles.googleIcon} />
+                  <Text style={styles.googleBtnText}>Continuar com Google</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+
+            {/* Guest Mode Button */}
+            <TouchableOpacity
+              style={styles.guestLinkBtn}
+              activeOpacity={0.8}
               onPress={handleGuestLogin}
-            />
-            <Text style={styles.guestDisclaimer}>
-              Acesso imediato para tirar cartas e consultar o oráculo sem cadastro.
-            </Text>
+              disabled={loading || googleLoading}
+            >
+              <Ionicons name="infinite-outline" size={18} color={MysticColors.gold} style={{ marginRight: 8 }} />
+              <Text style={styles.guestLinkText}>Entrar como Visitante Místico (Sem conta)</Text>
+            </TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -391,8 +432,9 @@ const styles = StyleSheet.create({
     color: MysticColors.goldLight,
     fontWeight: '800',
   },
-  guestSection: {
+  socialSection: {
     alignItems: 'center',
+    width: '100%',
   },
   dividerRow: {
     flexDirection: 'row',
@@ -403,18 +445,58 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: 'rgba(157, 101, 232, 0.2)',
+    backgroundColor: 'rgba(157, 101, 232, 0.25)',
   },
   dividerText: {
     color: MysticColors.textMuted,
     paddingHorizontal: 12,
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  guestDisclaimer: {
-    color: MysticColors.textMuted,
     fontSize: 11,
-    textAlign: 'center',
-    marginTop: 8,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  googleBtn: {
+    width: '100%',
+    height: 50,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 5,
+    elevation: 3,
+    marginBottom: 16,
+  },
+  googleBtnContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  googleIcon: {
+    marginRight: 10,
+  },
+  googleBtnText: {
+    color: '#1F1F1F',
+    fontSize: 15,
+    fontWeight: '700',
+    letterSpacing: 0.2,
+  },
+  guestLinkBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    borderRadius: 12,
+    backgroundColor: 'rgba(35, 18, 77, 0.55)',
+    borderWidth: 1,
+    borderColor: 'rgba(245, 206, 98, 0.35)',
+    width: '100%',
+  },
+  guestLinkText: {
+    color: MysticColors.goldLight,
+    fontSize: 13,
+    fontWeight: '700',
   },
 });
