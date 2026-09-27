@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
+import { useFonts } from 'expo-font';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { AskTarotScreen } from './src/screens/AskTarotScreen';
@@ -27,6 +28,9 @@ type TabType = 'home' | 'ask' | 'horoscope' | 'history' | 'profile';
 
 function MainApp() {
   const { user, isLoading } = useAuth();
+  const [fontsLoaded] = useFonts({
+    ...Ionicons.font,
+  });
   const [activeTab, setActiveTab] = useState<TabType>('home');
 
   // Subscreen navigation
@@ -35,7 +39,7 @@ function MainApp() {
   const [viewingReading, setViewingReading] = useState<TarotReading | null>(null);
   const [isViewingDeck, setIsViewingDeck] = useState(false);
 
-  if (isLoading) {
+  if (isLoading || !fontsLoaded) {
     return (
       <StarBackground>
         <View style={styles.loadingContainer}>
