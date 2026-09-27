@@ -1,4 +1,4 @@
-import { DrawnCard, SpreadType, TarotReading } from '../types/tarot';
+import { DrawnCard, SpreadType } from '../types/tarot';
 
 interface InterpretationResult {
   directAnswer: string;

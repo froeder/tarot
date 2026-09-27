@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,8 +7,6 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Animated,
-  Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -24,9 +22,22 @@ import { synthesizeTarotReading } from '../services/interpretationEngine';
 import { StorageService } from '../services/storageService';
 import { useAuth } from '../context/AuthContext';
 import { DrawnCard, SpreadType, TarotCard, TarotReading } from '../types/tarot';
-import { MysticColors, Gradients } from '../theme/colors';
+import { MysticColors } from '../theme/colors';
 
-const { width } = Dimensions.get('window');
+function getRandomIndices(count: number, max: number): number[] {
+  const indices: number[] = [];
+  while (indices.length < count && indices.length < max) {
+    const randIdx = Math.floor(Math.random() * max);
+    if (!indices.includes(randIdx)) {
+      indices.push(randIdx);
+    }
+  }
+  return indices;
+}
+
+function generateReadingId(): string {
+  return `reading_${Date.now()}`;
+}
 
 interface AskTarotScreenProps {
   initialSpreadId?: SpreadType;
@@ -52,8 +63,7 @@ export const AskTarotScreen: React.FC<AskTarotScreenProps> = ({
   const [selectedSpread, setSelectedSpread] = useState<SpreadType>(initialSpreadId);
   const [step, setStep] = useState<'question' | 'shuffling' | 'picking' | 'revealed'>('question');
   
-  // Cards picked for the reading
-  const [pickedCards, setPickedCards] = useState<DrawnCard[]>([]);
+
   const [isSynthesizing, setIsSynthesizing] = useState(false);
   const [completedReading, setCompletedReading] = useState<TarotReading | null>(null);
 
@@ -67,16 +77,66 @@ export const AskTarotScreen: React.FC<AskTarotScreenProps> = ({
   const currentSpreadConfig = getSpreadById(selectedSpread);
   const neededCards = currentSpreadConfig.cardCount;
 
-  // Initialize deck pool on mount or spread change
-  useEffect(() => {
-    prepareDeckPool();
-  }, [selectedSpread]);
-
-  const prepareDeckPool = async () => {
+  const prepareDeckPool = useCallback(async () => {
     const pool = await TarotApiService.drawCards(12, true);
     setDeckPool(pool);
     setSelectedPoolIndices([]);
-  };
+  }, []);
+
+  // Initialize deck pool on mount or spread change
+  useEffect(() => {
+    let isMounted = true;
+    TarotApiService.drawCards(12, true).then((pool) => {
+      if (isMounted) {
+        setDeckPool(pool);
+        setSelectedPoolIndices([]);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedSpread]);
+
+  const finalizeReading = useCallback(async (chosenIndices: number[]) => {
+    setIsSynthesizing(true);
+    setStep('revealed');
+
+    const drawn: DrawnCard[] = chosenIndices.map((poolIdx, order) => {
+      const item = deckPool[poolIdx];
+      const positionMeta = currentSpreadConfig.positions[order] || {
+        name: `Carta ${order + 1}`,
+        description: 'Aspecto da questão',
+      };
+
+      return {
+        card: item.card,
+        isReversed: item.isReversed,
+        positionName: positionMeta.name,
+        positionDescription: positionMeta.description,
+        order: order + 1,
+      };
+    });
+
+    // Synthesize interpretation
+    const interpretation = synthesizeTarotReading(question, selectedSpread, drawn);
+
+    const reading: TarotReading = {
+      id: generateReadingId(),
+      userId: user?.uid || 'guest',
+      userEmail: user?.email,
+      question: question.trim() || 'Consulta Geral das Estrelas',
+      spreadType: selectedSpread,
+      spreadTitle: currentSpreadConfig.title,
+      cards: drawn,
+      interpretation,
+      createdAt: new Date().toISOString(),
+    };
+
+    // Save to storage & firestore
+    await StorageService.saveReading(reading);
+    setCompletedReading(reading);
+    setIsSynthesizing(false);
+  }, [currentSpreadConfig, deckPool, question, selectedSpread, user?.email, user?.uid]);
 
   const handleStartShuffling = async () => {
     try {
@@ -109,64 +169,16 @@ export const AskTarotScreen: React.FC<AskTarotScreenProps> = ({
   };
 
   const handleAutoPickAll = () => {
-    const indicesToPick: number[] = [];
-    while (indicesToPick.length < neededCards) {
-      const randIdx = Math.floor(Math.random() * deckPool.length);
-      if (!indicesToPick.includes(randIdx)) {
-        indicesToPick.push(randIdx);
-      }
-    }
+    const indicesToPick = getRandomIndices(neededCards, deckPool.length);
     setSelectedPoolIndices(indicesToPick);
     finalizeReading(indicesToPick);
   };
 
-  const finalizeReading = async (chosenIndices: number[]) => {
-    setIsSynthesizing(true);
-    setStep('revealed');
 
-    const drawn: DrawnCard[] = chosenIndices.map((poolIdx, order) => {
-      const item = deckPool[poolIdx];
-      const positionMeta = currentSpreadConfig.positions[order] || {
-        name: `Carta ${order + 1}`,
-        description: 'Aspecto da questão',
-      };
-
-      return {
-        card: item.card,
-        isReversed: item.isReversed,
-        positionName: positionMeta.name,
-        positionDescription: positionMeta.description,
-        order: order + 1,
-      };
-    });
-
-    setPickedCards(drawn);
-
-    // Synthesize interpretation
-    const interpretation = synthesizeTarotReading(question, selectedSpread, drawn);
-
-    const reading: TarotReading = {
-      id: `reading_${Date.now()}`,
-      userId: user?.uid || 'guest',
-      userEmail: user?.email,
-      question: question.trim() || 'Consulta Geral das Estrelas',
-      spreadType: selectedSpread,
-      spreadTitle: currentSpreadConfig.title,
-      cards: drawn,
-      interpretation,
-      createdAt: new Date().toISOString(),
-    };
-
-    // Save to storage & firestore
-    await StorageService.saveReading(reading);
-    setCompletedReading(reading);
-    setIsSynthesizing(false);
-  };
 
   const handleReset = () => {
     setQuestion('');
     setStep('question');
-    setPickedCards([]);
     setSelectedPoolIndices([]);
     setCompletedReading(null);
   };
@@ -374,7 +386,7 @@ export const AskTarotScreen: React.FC<AskTarotScreenProps> = ({
                   <View style={styles.questionEchoBox}>
                     <Text style={styles.questionEchoLabel}>Sua Pergunta:</Text>
                     <Text style={styles.questionEchoText}>
-                      "{completedReading.question}"
+                      {`"${completedReading.question}"`}
                     </Text>
                   </View>
                 )}

@@ -12,7 +12,7 @@ import { StarBackground } from '../components/StarBackground';
 import { Header } from '../components/Header';
 import { TarotCardView } from '../components/TarotCardView';
 import { CardDetailModal } from '../components/CardDetailModal';
-import { TAROT_DECK, MAJOR_ARCANA, MINOR_ARCANA } from '../data/tarotCards';
+import { TAROT_DECK } from '../data/tarotCards';
 import { TarotCard } from '../types/tarot';
 import { MysticColors } from '../theme/colors';
 

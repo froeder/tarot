@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -32,7 +32,7 @@ export const TarotCardView: React.FC<TarotCardViewProps> = ({
   onPress,
   disabled = false,
 }) => {
-  const animatedValue = useRef(new Animated.Value(isRevealed ? 180 : 0)).current;
+  const [animatedValue] = React.useState(() => new Animated.Value(isRevealed ? 180 : 0));
 
   useEffect(() => {
     Animated.spring(animatedValue, {
@@ -41,7 +41,7 @@ export const TarotCardView: React.FC<TarotCardViewProps> = ({
       tension: 10,
       useNativeDriver: true,
     }).start();
-  }, [isRevealed]);
+  }, [isRevealed, animatedValue]);
 
   const frontInterpolate = animatedValue.interpolate({
     inputRange: [0, 180],

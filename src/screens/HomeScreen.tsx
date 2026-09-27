@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
   RefreshControl,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -21,7 +20,7 @@ import { ZODIAC_SIGNS } from '../data/horoscopeData';
 import { getCurrentMoonPhase } from '../services/moonService';
 import { StorageService } from '../services/storageService';
 import { TarotCard, DrawnCard, SpreadType } from '../types/tarot';
-import { MysticColors, Gradients } from '../theme/colors';
+import { MysticColors } from '../theme/colors';
 
 interface HomeScreenProps {
   onNavigateToAsk: (spreadId?: SpreadType) => void;
@@ -43,12 +42,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const [selectedModalCard, setSelectedModalCard] = useState<{ card: TarotCard; isReversed: boolean } | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Load or generate Daily Card
-  useEffect(() => {
-    loadDailyCard();
-  }, [user?.uid]);
-
-  const loadDailyCard = async () => {
+  const loadDailyCard = useCallback(async () => {
     const userId = user?.uid || 'guest';
     const saved = await StorageService.getDailyCard(userId);
     if (saved) {
@@ -68,7 +62,37 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       setIsDailyCardRevealed(false);
       await StorageService.saveDailyCard(userId, newDaily);
     }
-  };
+  }, [user?.uid]);
+
+  // Load or generate Daily Card
+  useEffect(() => {
+    let isMounted = true;
+    const userId = user?.uid || 'guest';
+    StorageService.getDailyCard(userId).then(async (saved) => {
+      if (!isMounted) return;
+      if (saved) {
+        setDailyCard(saved);
+        setIsDailyCardRevealed(true);
+      } else {
+        const [drawn] = getRandomCards(1, true);
+        const newDaily: DrawnCard = {
+          card: drawn.card,
+          isReversed: drawn.isReversed,
+          positionName: 'Carta do Dia',
+          positionDescription: 'Sua energia cósmica orientadora para hoje',
+          order: 1,
+        };
+        if (isMounted) {
+          setDailyCard(newDaily);
+          setIsDailyCardRevealed(false);
+        }
+        await StorageService.saveDailyCard(userId, newDaily);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.uid]);
 
   const handleRevealDailyCard = () => {
     setIsDailyCardRevealed(true);
@@ -228,7 +252,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                   {dailyCard.card.keywords.slice(0, 3).join(' • ')}
                 </Text>
                 <Text style={styles.revealedAdvice} numberOfLines={4}>
-                  "{dailyCard.card.advice}"
+                  {`"${dailyCard.card.advice}"`}
                 </Text>
                 <TouchableOpacity
                   onPress={() =>

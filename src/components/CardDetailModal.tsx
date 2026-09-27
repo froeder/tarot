@@ -12,9 +12,9 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { TarotCard } from '../types/tarot';
-import { MysticColors, Gradients } from '../theme/colors';
+import { MysticColors } from '../theme/colors';
 
-const { width, height } = Dimensions.get('window');
+const { height } = Dimensions.get('window');
 
 interface CardDetailModalProps {
   card: TarotCard | null;

@@ -104,7 +104,7 @@ export const ReadingDetailScreen: React.FC<ReadingDetailScreenProps> = ({
         {/* Question card */}
         <View style={styles.questionCard}>
           <Text style={styles.questionLabel}>A Pergunta Formulada:</Text>
-          <Text style={styles.questionText}>"{reading.question}"</Text>
+          <Text style={styles.questionText}>{`"${reading.question}"`}</Text>
         </View>
 
         {/* Energy Vibe & Dominant Element */}

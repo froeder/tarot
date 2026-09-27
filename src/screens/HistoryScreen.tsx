@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -17,7 +17,7 @@ import { Header } from '../components/Header';
 import { MysticButton } from '../components/MysticButton';
 import { StorageService } from '../services/storageService';
 import { useAuth } from '../context/AuthContext';
-import { TarotReading, SpreadType } from '../types/tarot';
+import { TarotReading } from '../types/tarot';
 import { MysticColors } from '../theme/colors';
 
 interface HistoryScreenProps {
@@ -36,16 +36,25 @@ export const HistoryScreen: React.FC<HistoryScreenProps> = ({
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    loadHistory();
-  }, [user?.uid]);
-
-  const loadHistory = async () => {
+  const loadHistory = useCallback(async () => {
     setLoading(true);
     const data = await StorageService.getReadings(user?.uid || 'guest');
     setReadings(data);
     setLoading(false);
-  };
+  }, [user?.uid]);
+
+  useEffect(() => {
+    let isMounted = true;
+    StorageService.getReadings(user?.uid || 'guest').then((data) => {
+      if (isMounted) {
+        setReadings(data);
+        setLoading(false);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.uid]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -117,7 +126,7 @@ export const HistoryScreen: React.FC<HistoryScreenProps> = ({
 
           {/* Question */}
           <Text style={styles.questionText} numberOfLines={2}>
-            "{item.question}"
+            {`"${item.question}"`}
           </Text>
 
           {/* Cards Thumbnails Row */}
