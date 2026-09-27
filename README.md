@@ -75,23 +75,33 @@ npx expo start --web
 
 ---
 
-## ⚙️ Configuração do Firebase via `.env`
+## ⚙️ Configuração do Firebase & Hosting
 
 O app já vem preparado para ler automaticamente as credenciais do seu arquivo `.env` usando o padrão oficial do Expo (`EXPO_PUBLIC_*`).
 
-1. Acesse o [Console do Firebase](https://console.firebase.google.com/).
-2. Crie ou selecione o seu projeto.
-3. Ative **Authentication** (habilite os provedores **E-mail/Senha** e **Anônimo**).
-4. Ative o banco de dados **Cloud Firestore**.
-5. Abra o arquivo [.env](file:///c:/Users/john/Documents/Projetos/meuTarot/.env) na raiz do projeto e preencha suas chaves:
+1. **Projeto Firebase**: `frojho`
+2. **Banco Cloud Firestore**: `frojho-tarot`
+3. **Firebase Hosting**: `https://frojho-tarot.web.app`
+
+Exemplo de [.env](file:///c:/Users/john/Documents/Projetos/meuTarot/.env) configurado:
 
 ```env
 EXPO_PUBLIC_FIREBASE_API_KEY=AIzaSy...
-EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=seu-projeto.firebaseapp.com
-EXPO_PUBLIC_FIREBASE_PROJECT_ID=seu-projeto
-EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=seu-projeto.appspot.com
-EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123456789012
-EXPO_PUBLIC_FIREBASE_APP_ID=1:123456789012:web:abcdef123456
+EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=frojho-tarot.firebaseapp.com
+EXPO_PUBLIC_FIREBASE_PROJECT_ID=frojho
+EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=frojho.firebasestorage.app
+EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=1029343752086
+EXPO_PUBLIC_FIREBASE_APP_ID=1:1029343752086:web:3551e7509e2278702437b7
+EXPO_PUBLIC_FIREBASE_DATABASE_ID=frojho-tarot
+EXPO_PUBLIC_FIREBASE_HOSTING_URL=https://frojho-tarot.web.app
+```
+
+### 🌐 Deploy para o Firebase Hosting
+
+Para exportar a versão Web e publicar no Firebase Hosting (`frojho-tarot.web.app`):
+
+```bash
+npm run deploy:hosting
 ```
 
 > **Nota:** Caso o `.env` esteja em branco ou incompleto, o app entra automaticamente no **Modo Místico Local/Offline**, permitindo utilizar todas as funcionalidades e histórico normalmente sem travar!

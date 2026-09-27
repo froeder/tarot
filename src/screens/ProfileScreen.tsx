@@ -28,6 +28,7 @@ export const ProfileScreen: React.FC = () => {
   const [apiKey, setApiKey] = useState(defaultFirebaseConfig.apiKey);
   const [projectId, setProjectId] = useState(defaultFirebaseConfig.projectId);
   const [authDomain, setAuthDomain] = useState(defaultFirebaseConfig.authDomain);
+  const [databaseId, setDatabaseId] = useState(defaultFirebaseConfig.databaseId || 'frojho-tarot');
 
   const currentZodiac = ZODIAC_SIGNS.find(
     (z) => z.name.toLowerCase() === (user?.zodiacSign || 'peixes').toLowerCase()
@@ -44,6 +45,7 @@ export const ProfileScreen: React.FC = () => {
       apiKey: apiKey.trim(),
       projectId: projectId.trim(),
       authDomain: authDomain.trim(),
+      databaseId: databaseId.trim(),
     });
     setIsConfigModalVisible(false);
     Alert.alert('Configuração Salva', 'As novas chaves do Firebase foram gravadas com sucesso!');
@@ -217,7 +219,18 @@ export const ProfileScreen: React.FC = () => {
                 style={styles.configInput}
                 value={authDomain}
                 onChangeText={setAuthDomain}
-                placeholder="meutarot-app.firebaseapp.com"
+                placeholder="frojho-tarot.firebaseapp.com"
+                placeholderTextColor={MysticColors.textMuted}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.configInputLabel}>Banco Firestore (Database ID):</Text>
+              <TextInput
+                style={styles.configInput}
+                value={databaseId}
+                onChangeText={setDatabaseId}
+                placeholder="frojho-tarot"
                 placeholderTextColor={MysticColors.textMuted}
               />
             </View>

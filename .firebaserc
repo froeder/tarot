@@ -1,0 +1,14 @@
+{
+  "projects": {
+    "default": "frojho"
+  },
+  "targets": {
+    "frojho": {
+      "hosting": {
+        "frojho-tarot": [
+          "frojho-tarot"
+        ]
+      }
+    }
+  }
+}

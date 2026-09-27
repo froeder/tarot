@@ -3,12 +3,6 @@ import {
   initializeAuth,
   getAuth,
   Auth,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-  signInAnonymously,
-  onAuthStateChanged,
-  User,
 } from 'firebase/auth';
 // @ts-ignore - React Native specific persistence from Firebase RN distribution
 import { getReactNativePersistence } from '@firebase/auth/dist/rn/index.js';
@@ -18,11 +12,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // Firebase configuration loaded from environment variables (EXPO_PUBLIC_*)
 export const defaultFirebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY || "",
-  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN || "",
-  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID || "",
-  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET || "",
+  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN || "frojho-tarot.firebaseapp.com",
+  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID || "frojho",
+  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET || "frojho.firebasestorage.app",
   messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "",
   appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID || "",
+  databaseId: process.env.EXPO_PUBLIC_FIREBASE_DATABASE_ID || "frojho-tarot",
+  hostingUrl: process.env.EXPO_PUBLIC_FIREBASE_HOSTING_URL || "https://frojho-tarot.web.app",
 };
 
 let app: FirebaseApp | null = null;
@@ -57,6 +53,8 @@ export function initFirebase(config = defaultFirebaseConfig) {
     const hasValidCredentials = Boolean(config.apiKey && config.projectId);
 
     if (hasValidCredentials) {
+      const targetDatabase = config.databaseId || 'frojho-tarot';
+
       if (!getApps().length) {
         app = initializeApp(config);
         try {
@@ -66,12 +64,12 @@ export function initFirebase(config = defaultFirebaseConfig) {
         } catch {
           auth = getAuth(app);
         }
-        db = getFirestore(app);
+        db = getFirestore(app, targetDatabase);
         isFirebaseInitialized = true;
       } else {
         app = getApp();
         auth = getAuth(app);
-        db = getFirestore(app);
+        db = getFirestore(app, targetDatabase);
         isFirebaseInitialized = true;
       }
     } else {
@@ -86,6 +84,6 @@ export function initFirebase(config = defaultFirebaseConfig) {
 }
 
 // Initial bootstrap
-const firebaseInstance = initFirebase();
+initFirebase();
 
 export { app, auth, db, isFirebaseInitialized };
