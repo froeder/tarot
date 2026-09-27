@@ -5,9 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  TextInput,
   Modal,
-  Alert,
   Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -17,19 +15,12 @@ import { Header } from '../components/Header';
 import { MysticButton } from '../components/MysticButton';
 import { useAuth } from '../context/AuthContext';
 import { ZODIAC_SIGNS } from '../data/horoscopeData';
-import { isFirebaseInitialized, defaultFirebaseConfig, saveCustomFirebaseConfig } from '../services/firebase';
+import { isFirebaseInitialized } from '../services/firebase';
 import { MysticColors } from '../theme/colors';
 
 export const ProfileScreen: React.FC = () => {
   const { user, signOut, updateProfile } = useAuth();
   const [isEditingZodiac, setIsEditingZodiac] = useState(false);
-  const [isConfigModalVisible, setIsConfigModalVisible] = useState(false);
-
-  // Firebase config editor state
-  const [apiKey, setApiKey] = useState(defaultFirebaseConfig.apiKey);
-  const [projectId, setProjectId] = useState(defaultFirebaseConfig.projectId);
-  const [authDomain, setAuthDomain] = useState(defaultFirebaseConfig.authDomain);
-  const [databaseId, setDatabaseId] = useState(defaultFirebaseConfig.databaseId || 'frojho-tarot');
 
   const currentZodiac = ZODIAC_SIGNS.find(
     (z) => z.name.toLowerCase() === (user?.zodiacSign || 'peixes').toLowerCase()
@@ -38,18 +29,6 @@ export const ProfileScreen: React.FC = () => {
   const handleSelectZodiac = async (signName: string) => {
     await updateProfile({ zodiacSign: signName });
     setIsEditingZodiac(false);
-  };
-
-  const handleSaveFirebaseConfig = async () => {
-    await saveCustomFirebaseConfig({
-      ...defaultFirebaseConfig,
-      apiKey: apiKey.trim(),
-      projectId: projectId.trim(),
-      authDomain: authDomain.trim(),
-      databaseId: databaseId.trim(),
-    });
-    setIsConfigModalVisible(false);
-    Alert.alert('Configuração Salva', 'As novas chaves do Firebase foram gravadas com sucesso!');
   };
 
   return (
@@ -106,31 +85,25 @@ export const ProfileScreen: React.FC = () => {
           </LinearGradient>
         </View>
 
-        {/* Backend & Firebase Status Card */}
+        {/* Sync Status Card */}
         <View style={styles.backendCard}>
           <View style={styles.backendHeader}>
             <Ionicons
-              name={isFirebaseInitialized ? 'shield-checkmark' : 'cloud-offline'}
+              name={isFirebaseInitialized ? 'cloud-done-outline' : 'cloud-offline-outline'}
               size={22}
               color={isFirebaseInitialized ? MysticColors.success : MysticColors.gold}
             />
             <View style={{ flex: 1, marginLeft: 10 }}>
-              <Text style={styles.backendTitle}>Backend Firebase</Text>
+              <Text style={styles.backendTitle}>Sincronização Astral</Text>
               <Text style={styles.backendStatus}>
                 {isFirebaseInitialized
-                  ? 'Conectado • Auth & Firestore ativos'
-                  : 'Modo Offline / Demonstração Ativo'}
+                  ? 'Conectado • Histórico sincronizado em nuvem'
+                  : 'Modo Offline • Salvo no aparelho'}
               </Text>
             </View>
-            <TouchableOpacity
-              style={styles.configBtn}
-              onPress={() => setIsConfigModalVisible(true)}
-            >
-              <Ionicons name="settings-outline" size={18} color={MysticColors.goldLight} />
-            </TouchableOpacity>
           </View>
           <Text style={styles.backendDesc}>
-            Suas tiragens e histórico são mantidos e sincronizados com persistência local e nuvem.
+            Suas tiragens e histórico de cartas ficam sincronizados e protegidos com segurança.
           </Text>
         </View>
 
@@ -192,79 +165,6 @@ export const ProfileScreen: React.FC = () => {
               onPress={() => setIsEditingZodiac(false)}
               style={{ marginTop: 12 }}
             />
-          </View>
-        </View>
-      </Modal>
-
-      {/* Firebase Config Modal */}
-      <Modal visible={isConfigModalVisible} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.configModalBox}>
-            <Text style={styles.modalTitle}>Configuração do Firebase</Text>
-            <Text style={styles.configSubtitle}>
-              Insira as credenciais do seu projeto Firebase se desejar conectar à sua própria conta:
-            </Text>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.configInputLabel}>Project ID:</Text>
-              <TextInput
-                style={styles.configInput}
-                value={projectId}
-                onChangeText={setProjectId}
-                placeholder="meutarot-app"
-                placeholderTextColor={MysticColors.textMuted}
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.configInputLabel}>API Key:</Text>
-              <TextInput
-                style={styles.configInput}
-                value={apiKey}
-                onChangeText={setApiKey}
-                placeholder="AIzaSy..."
-                placeholderTextColor={MysticColors.textMuted}
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.configInputLabel}>Auth Domain:</Text>
-              <TextInput
-                style={styles.configInput}
-                value={authDomain}
-                onChangeText={setAuthDomain}
-                placeholder="frojho-tarot.firebaseapp.com"
-                placeholderTextColor={MysticColors.textMuted}
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.configInputLabel}>Banco Firestore (Database ID):</Text>
-              <TextInput
-                style={styles.configInput}
-                value={databaseId}
-                onChangeText={setDatabaseId}
-                placeholder="frojho-tarot"
-                placeholderTextColor={MysticColors.textMuted}
-              />
-            </View>
-
-            <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
-              <MysticButton
-                title="Cancelar"
-                variant="outline"
-                size="md"
-                onPress={() => setIsConfigModalVisible(false)}
-                style={{ flex: 1 }}
-              />
-              <MysticButton
-                title="Salvar"
-                variant="gold"
-                size="md"
-                onPress={handleSaveFirebaseConfig}
-                style={{ flex: 1 }}
-              />
-            </View>
           </View>
         </View>
       </Modal>
@@ -395,11 +295,6 @@ const styles = StyleSheet.create({
     color: MysticColors.goldLight,
     fontSize: 12,
     marginTop: 1,
-  },
-  configBtn: {
-    padding: 8,
-    backgroundColor: 'rgba(73, 16, 136, 0.5)',
-    borderRadius: 10,
   },
   backendDesc: {
     color: MysticColors.textSecondary,
