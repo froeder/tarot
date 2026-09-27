@@ -8,6 +8,7 @@ import {
 import { getReactNativePersistence } from '@firebase/auth/dist/rn/index.js';
 import { getFirestore, Firestore } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
 // Firebase configuration loaded from environment variables (EXPO_PUBLIC_*)
 export const defaultFirebaseConfig = {
@@ -58,9 +59,13 @@ export function initFirebase(config = defaultFirebaseConfig) {
       if (!getApps().length) {
         app = initializeApp(config);
         try {
-          auth = initializeAuth(app, {
-            persistence: getReactNativePersistence(AsyncStorage),
-          });
+          if (Platform.OS === 'web') {
+            auth = getAuth(app);
+          } else {
+            auth = initializeAuth(app, {
+              persistence: getReactNativePersistence(AsyncStorage),
+            });
+          }
         } catch {
           auth = getAuth(app);
         }

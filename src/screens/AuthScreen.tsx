@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { StarBackground } from '../components/StarBackground';
@@ -70,18 +71,25 @@ export const AuthScreen: React.FC = () => {
     try {
       await signInWithGoogle();
     } catch (err: any) {
-      console.warn('Google sign-in error:', err);
+      console.error('Google sign-in error:', err);
       let msg = 'Não foi possível autenticar com o Google.';
       if (err.code === 'auth/popup-closed-by-user') {
         msg = 'A janela do Google foi fechada antes de concluir o login.';
       } else if (err.code === 'auth/popup-blocked') {
-        msg = 'O navegador bloqueou o pop-up do Google. Permita pop-ups para entrar.';
+        msg = 'O navegador bloqueou a janela pop-up do Google. Por favor, permita pop-ups para este site.';
+      } else if (err.code === 'auth/unauthorized-domain') {
+        msg = 'Domínio não autorizado no Firebase Authentication. Adicione o domínio atual (ex: localhost, 127.0.0.1 ou seu domínio web) em Firebase Console > Authentication > Settings > Authorized domains.';
       } else if (err.code === 'auth/account-exists-with-different-credential') {
         msg = 'Já existe uma conta associada a este e-mail.';
+      } else if (err.code === 'auth/cancelled-popup-request') {
+        msg = 'Uma solicitação de login já está em andamento.';
       } else if (err.message) {
         msg = err.message;
       }
       setErrorMessage(msg);
+      if (err.code !== 'auth/popup-closed-by-user') {
+        Alert.alert('Autenticação Google', msg);
+      }
     } finally {
       setGoogleLoading(false);
     }
@@ -266,6 +274,14 @@ export const AuthScreen: React.FC = () => {
                 </View>
               )}
             </TouchableOpacity>
+
+            {/* Error Message near Google button if present */}
+            {errorMessage ? (
+              <View style={[styles.errorBox, { marginTop: 12, marginBottom: 4 }]}>
+                <Ionicons name="alert-circle" size={18} color={MysticColors.error} />
+                <Text style={styles.errorText}>{errorMessage}</Text>
+              </View>
+            ) : null}
 
             {/* Guest Mode Button */}
             <TouchableOpacity
