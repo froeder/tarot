@@ -33,13 +33,11 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files
+# CRITICAL: local env files - NEVER COMMIT API KEYS
 .env
 .env*.local
-**/.env
-**/.env*.local
-mobile/.env
-mobile/.env*.local
+*.env
+*.env.local
 
 # typescript
 *.tsbuildinfo
