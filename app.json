@@ -8,9 +8,11 @@
     "userInterfaceStyle": "dark",
     "backgroundColor": "#070312",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.frojho.meutarot"
     },
     "android": {
+      "package": "com.frojho.meutarot",
       "adaptiveIcon": {
         "backgroundColor": "#0D061F",
         "foregroundImage": "./assets/android-icon-foreground.png",

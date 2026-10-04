@@ -10,11 +10,11 @@
     "backgroundColor": "#070312",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.meutarot.app",
+      "bundleIdentifier": "com.frojho.meutarot",
       "icon": "./assets/icon.png"
     },
     "android": {
-      "package": "com.meutarot.app",
+      "package": "com.frojho.meutarot",
       "adaptiveIcon": {
         "backgroundColor": "#0D061F",
         "foregroundImage": "./assets/android-icon-foreground.png",
