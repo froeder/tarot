@@ -2,6 +2,7 @@
   "expo": {
     "name": "Meu Tarot",
     "slug": "meuTarot",
+    "scheme": "meutarot",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -9,15 +10,14 @@
     "backgroundColor": "#070312",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.frojho.meutarot"
+      "bundleIdentifier": "com.frojho.meutarot",
+      "icon": "./assets/icon.png"
     },
     "android": {
       "package": "com.frojho.meutarot",
       "adaptiveIcon": {
         "backgroundColor": "#0D061F",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "foregroundImage": "./assets/android-icon-foreground.png"
       },
       "predictiveBackGestureEnabled": false
     },
@@ -27,6 +27,11 @@
     "plugins": [
       "expo-font",
       "@react-native-google-signin/google-signin"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "3f686197-30f7-4aa4-95da-beb17174ece9"
+      }
+    }
   }
 }
